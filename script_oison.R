@@ -16,7 +16,7 @@ library(sf)
 
 source(file = "R/functions.R")
 
-## Import données espèces ONPENOBS et communes ----
+## Import données espèces ONPENOBS et communes au 20230622 ----
 
 amphibiens <- data.table::fread(file = "data/liste_bocage_amphibiens.csv",
                                 encoding = "UTF-8",
@@ -74,7 +74,7 @@ reptiles <- data.table::fread(file = "data/liste_bocage_reptiles.csv",
                                              "codeInseeEPCI" = "character", 
                                              "idCampanuleProtocole" = "character"))    
 
-
+communes <- sf::read_sf(dsn = "data/COMMUNE.shp")
 
 ## Création d'une seule table especes ----
 
@@ -111,3 +111,33 @@ sp_reptiles_commune <- reptiles%>%
   summarise(reptiles = paste(nomVernaculaire, collapse = ', '))
 
 ## Jointure à la couche commune ----
+
+sp_communes <- communes %>% 
+  dplyr::left_join(sp_amphibiens_commune, 
+                   by = c("INSEE_COM" = "codeInseeCommune")) %>%
+  dplyr::left_join(sp_insectes_commune, 
+                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+  dplyr::left_join(sp_chiropteres_commune, 
+                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+  dplyr::left_join(sp_mammiferes_commune, 
+                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+  dplyr::left_join(sp_mollusque_commune, 
+                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+  dplyr::left_join(sp_oiseaux_commune, 
+                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+  dplyr::left_join(sp_reptiles_commune, 
+                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+  mutate(amphibiens = recoder_manquantes_en_zero(amphibiens),
+         insectes = recoder_manquantes_en_zero(insectes),
+         chiropteres = recoder_manquantes_en_zero(chiropteres),
+         mammiferes = recoder_manquantes_en_zero(mammiferes),
+         mollusque = recoder_manquantes_en_zero(mollusque),
+         oiseaux = recoder_manquantes_en_zero(oiseaux),
+         reptiles = recoder_manquantes_en_zero(reptiles))
+
+## Export de la couche commune ----
+
+sf::write_sf(obj = sp_communes, dsn = "data/outputs/sp_openobs_communes_20230622.gpkg")
+
+
+
