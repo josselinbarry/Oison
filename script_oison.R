@@ -108,13 +108,17 @@ cd_insee_especes <- cd_manquant_especes %>%
 
 ## Mise à jour du code INSEE commune de la couche especes_geom
 
-especes_geom_cd <- especes_geom  %>%
+especes_geom_cd2 <- especes_geom  %>%
   left_join(cd_insee_especes, by = c("idSINPOccTax" = "idSINPOccTax")) %>%  
-  mutate(codeInseeCommune = case_when(
-    is.na(codeInseeCommune) ~ com_la_plus_proche,
-    !is.na(codeInseeCommune) ~ codeInseeCommune)) %>%
+  mutate(codeInseeCommune = ifelse(
+    codeInseeCommune == '',
+    com_la_plus_proche,
+    codeInseeCommune)) %>%
   distinct() %>%
   select(-com_la_plus_proche, -distance_km)
+
+nb_esp_geom_sans_INSEE <- especes_geom_cd %>%
+  filter(codeInseeCommune == '')
 
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
 

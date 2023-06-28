@@ -6,7 +6,7 @@ Ces préidentifications d'espèces pourront servir aux agents chargés de la ré
 
 ## Import des données
 
-Les données sont téléchargées depuis le site https://openobs.mnhn.fr/ à partir de la liste d'espèces régionale retenue dans le cadre du projet Bocage - Bretagne.
+Les données sont téléchargées depuis le site https://openobs.mnhn.fr/ à partir de la liste d'espèces régionale, retenue dans le cadre du projet Bocage - Bretagne.
 
 ## Ajout du code INSEE commune
 
