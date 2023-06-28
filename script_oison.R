@@ -84,31 +84,31 @@ especes <- dplyr::bind_rows(amphibiens, insectes, chiropteres, mammiferes, mollu
 
 sp_amphibiens_commune <- amphibiens%>%
   group_by(codeInseeCommune) %>%
-  summarise(amphibiens = paste(nomVernaculaire, collapse = ', '))
+  summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', '))
 
 sp_insectes_commune <- insectes%>%
   group_by(codeInseeCommune) %>%
-  summarise(insectes = paste(nomVernaculaire, collapse = ', '))
+  summarise(insectes = paste(unique(nomVernaculaire), collapse = ', '))
 
 sp_chiropteres_commune <- chiropteres%>%
   group_by(codeInseeCommune) %>%
-  summarise(chiropteres = paste(nomVernaculaire, collapse = ', '))
+  summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', '))
 
 sp_mammiferes_commune <- mammiferes%>%
   group_by(codeInseeCommune) %>%
-  summarise(mammiferes = paste(nomVernaculaire, collapse = ', '))
+  summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', '))
 
 sp_mollusque_commune <- mollusque%>%
   group_by(codeInseeCommune) %>%
-  summarise(mollusque = paste(nomVernaculaire, collapse = ', '))
+  summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', '))
 
 sp_oiseaux_commune <- oiseaux%>%
   group_by(codeInseeCommune) %>%
-  summarise(oiseaux = paste(nomVernaculaire, collapse = ', '))
+  summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', '))
 
 sp_reptiles_commune <- reptiles%>%
   group_by(codeInseeCommune) %>%
-  summarise(reptiles = paste(nomVernaculaire, collapse = ', '))
+  summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', '))
 
 ## Jointure à la couche commune ----
 
