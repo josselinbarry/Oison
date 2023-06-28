@@ -117,7 +117,7 @@ especes_geom_cd2 <- especes_geom  %>%
   distinct() %>%
   select(-com_la_plus_proche, -distance_km)
 
-nb_esp_geom_sans_INSEE <- especes_geom_cd %>%
+nb_esp_geom_sans_INSEE <- especes_geom_cd2 %>%
   filter(codeInseeCommune == '')
 
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
@@ -125,37 +125,44 @@ nb_esp_geom_sans_INSEE <- especes_geom_cd %>%
 sp_amphibiens_commune <- especes_geom_cd %>%
   filter(classe == 'Amphibia') %>%
   group_by(codeInseeCommune) %>%
-  summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', '))
+  summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
 
 sp_insectes_commune <- especes_geom_cd %>%
   filter(classe == 'Insecta') %>%
   group_by(codeInseeCommune) %>%
-  summarise(insectes = paste(unique(nomVernaculaire), collapse = ', '))
+  summarise(insectes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
 
 sp_chiropteres_commune <- especes_geom_cd %>%
   filter(ordre == 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
-  summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', '))
+  summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
 
 sp_mammiferes_commune <- especes_geom_cd %>%
   filter(classe == 'Mammalia' & ordre != 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
-  summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', '))
+  summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
 
 sp_mollusque_commune <- especes_geom_cd %>%
   filter(classe == 'Gastropoda') %>%
   group_by(codeInseeCommune) %>%
-  summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', '))
+  summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
 
 sp_oiseaux_commune <- especes_geom_cd %>%
   filter(classe == 'Aves') %>%
   group_by(codeInseeCommune) %>%
-  summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', '))
+  summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
 
 sp_reptiles_commune <- especes_geom_cd %>%
   filter(ordre == 'Squamata') %>%
   group_by(codeInseeCommune) %>%
-  summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', '))
+  summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
 
 ## Jointure à la couche commune ----
 
