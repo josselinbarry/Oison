@@ -122,43 +122,43 @@ nb_esp_geom_sans_INSEE <- especes_geom_cd2 %>%
 
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
 
-sp_amphibiens_commune <- especes_geom_cd %>%
+sp_amphibiens_commune <- especes_geom_cd2 %>%
   filter(classe == 'Amphibia') %>%
   group_by(codeInseeCommune) %>%
   summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_insectes_commune <- especes_geom_cd %>%
+sp_insectes_commune <- especes_geom_cd2 %>%
   filter(classe == 'Insecta') %>%
   group_by(codeInseeCommune) %>%
   summarise(insectes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_chiropteres_commune <- especes_geom_cd %>%
+sp_chiropteres_commune <- especes_geom_cd2 %>%
   filter(ordre == 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
   summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mammiferes_commune <- especes_geom_cd %>%
+sp_mammiferes_commune <- especes_geom_cd2 %>%
   filter(classe == 'Mammalia' & ordre != 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
   summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mollusque_commune <- especes_geom_cd %>%
+sp_mollusque_commune <- especes_geom_cd2 %>%
   filter(classe == 'Gastropoda') %>%
   group_by(codeInseeCommune) %>%
   summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_oiseaux_commune <- especes_geom_cd %>%
+sp_oiseaux_commune <- especes_geom_cd2 %>%
   filter(classe == 'Aves') %>%
   group_by(codeInseeCommune) %>%
   summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_reptiles_commune <- especes_geom_cd %>%
+sp_reptiles_commune <- especes_geom_cd2 %>%
   filter(ordre == 'Squamata') %>%
   group_by(codeInseeCommune) %>%
   summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
@@ -194,4 +194,6 @@ sp_communes <- communes %>%
 sf::write_sf(obj = sp_communes, dsn = "data/outputs/sp_openobs_communes_20230622.gpkg")
 
 
-
+## test
+test <- especes_geom_cd2%>%
+filter(idSINPOccTax == 'b1768dec-fa5e-236d-e053-5014a8c0544d')
