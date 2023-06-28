@@ -76,7 +76,7 @@ reptiles <- data.table::fread(file = "data/liste_bocage_reptiles.csv",
 
 communes <- sf::read_sf(dsn = "data/COMMUNE.shp")
 
-## Création d'une couche géographique especes ----
+## Création d'une couche géographique especes en L93 ----
 
 especes <- dplyr::bind_rows(amphibiens, insectes, chiropteres, mammiferes, mollusque, oiseaux, reptiles) 
 
@@ -85,44 +85,71 @@ especes_geom <- especes %>%
   st_as_sf(coords = c("longitude", "latitude"), remove = FALSE, crs = 4326) %>%
   st_transform(especes_geom, crs = 2154)
 
-## Ajout des code INSEE commune pour les observations ponctuelles et centroïde commune qui ne sont pas renseignées
+## Ajout du code INSEE de la commune la plus proche de l'observation (hors pas de XY) pour les codeINSEE non renseignés
 
-cd_ajoute_especes <- especes_geom %>%
+cd_manquant_especes <- especes_geom %>%
   select(idSINPOccTax, codeInseeCommune, precisionLocalisation) %>%
   filter((codeInseeCommune == '' | is.na(codeInseeCommune)) &
-              precisionLocalisation %in% c('XY centroïde commune','XY centroïde ligne/polygone','XY point',  'XY centroïde maille' )) %>%
-  st_join(communes) %>% 
-  mutate(codeInseeCommune = INSEE_COM) %>%
+              precisionLocalisation %in% c('XY centroïde commune','XY centroïde ligne/polygone','XY point',  'XY centroïde maille' ))
+
+plus_proche_commune <- sf::st_nearest_feature(x = cd_manquant_especes,
+                                           y = communes)
+
+dist <- st_distance(cd_manquant_especes, communes[plus_proche_commune,], by_element = TRUE)
+
+cd_insee_especes <- cd_manquant_especes %>% 
+  cbind(dist) %>% 
+  cbind(communes[plus_proche_commune,]) %>% 
+  select(idSINPOccTax,
+         com_la_plus_proche = INSEE_COM,
+         distance_km = dist) %>% 
+  sf::st_drop_geometry() %>% 
+  mutate(distance_km = round(distance_km/1000,3))
+
+## Mise à jour du code INSEE commune de la couche especes_geom
+
+especes_geom_cd <- especes_geom  %>%
+  left_join(cd_insee_especes, by = c("idSINPOccTax" = "idSINPOccTax")) %>%  
+  mutate(codeInseeCommune = case_when(
+    is.na(codeInseeCommune) ~ com_la_plus_proche,
+    !is.na(codeInseeCommune) ~ codeInseeCommune)) %>%
   distinct() %>%
-  select(idSINPOccTax, codeInseeCommune, precisionLocalisation)
+  select(-com_la_plus_proche, -distance_km)
 
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
 
-sp_amphibiens_commune <- amphibiens%>%
+sp_amphibiens_commune <- especes_geom_cd %>%
+  filter(classe == 'Amphibia') %>%
   group_by(codeInseeCommune) %>%
   summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', '))
 
-sp_insectes_commune <- insectes%>%
+sp_insectes_commune <- especes_geom_cd %>%
+  filter(classe == 'Insecta') %>%
   group_by(codeInseeCommune) %>%
   summarise(insectes = paste(unique(nomVernaculaire), collapse = ', '))
 
-sp_chiropteres_commune <- chiropteres%>%
+sp_chiropteres_commune <- especes_geom_cd %>%
+  filter(ordre == 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
   summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', '))
 
-sp_mammiferes_commune <- mammiferes%>%
+sp_mammiferes_commune <- especes_geom_cd %>%
+  filter(classe == 'Mammalia' & ordre != 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
   summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', '))
 
-sp_mollusque_commune <- mollusque%>%
+sp_mollusque_commune <- especes_geom_cd %>%
+  filter(classe == 'Gastropoda') %>%
   group_by(codeInseeCommune) %>%
   summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', '))
 
-sp_oiseaux_commune <- oiseaux%>%
+sp_oiseaux_commune <- especes_geom_cd %>%
+  filter(classe == 'Aves') %>%
   group_by(codeInseeCommune) %>%
   summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', '))
 
-sp_reptiles_commune <- reptiles%>%
+sp_reptiles_commune <- especes_geom_cd %>%
+  filter(ordre == 'Squamata') %>%
   group_by(codeInseeCommune) %>%
   summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', '))
 
