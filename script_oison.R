@@ -76,9 +76,25 @@ reptiles <- data.table::fread(file = "data/liste_bocage_reptiles.csv",
 
 communes <- sf::read_sf(dsn = "data/COMMUNE.shp")
 
-## Création d'une seule table especes ----
+## Création d'une couche géographique especes ----
 
 especes <- dplyr::bind_rows(amphibiens, insectes, chiropteres, mammiferes, mollusque, oiseaux, reptiles) 
+
+especes_geom <- especes %>% 
+  filter(!is.na(longitude) & !is.na(latitude)) %>%
+  st_as_sf(coords = c("longitude", "latitude"), remove = FALSE, crs = 4326) %>%
+  st_transform(especes_geom, crs = 2154)
+
+## Ajout des code INSEE commune pour les observations ponctuelles et centroïde commune qui ne sont pas renseignées
+
+cd_ajoute_especes <- especes_geom %>%
+  select(idSINPOccTax, codeInseeCommune, precisionLocalisation) %>%
+  filter((codeInseeCommune == '' | is.na(codeInseeCommune)) &
+              precisionLocalisation %in% c('XY centroïde commune','XY centroïde ligne/polygone','XY point',  'XY centroïde maille' )) %>%
+  st_join(communes) %>% 
+  mutate(codeInseeCommune = INSEE_COM) %>%
+  distinct() %>%
+  select(idSINPOccTax, codeInseeCommune, precisionLocalisation)
 
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
 
