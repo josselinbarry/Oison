@@ -89,6 +89,7 @@ oison_bzh_bocage <-
     'Muscicapa striata', 
     'Myotis alcathoe', 
     'Myotis bechsteinii', 
+    'Myotis brandtii', 
     'Myotis daubentonii', 
     'Myotis emarginatus', 
     'Myotis myotis', 
@@ -118,6 +119,7 @@ oison_bzh_bocage <-
     'Pipistrellus kuhlii', 
     'Pipistrellus nathusii', 
     'Pipistrellus pipistrellus', 
+    'Pipistrellus pygmaeus',
     'Plecotus auritus', 
     'Plecotus auritus auritus', 
     'Plecotus austriacus', 
@@ -152,7 +154,7 @@ oison_bzh_bocage <-
 
 ## Analyse des données OISON-BOCAGE ----
 
-### Nombre de données par département ----
+### Préparation des données par groupby ----
 
 oison_bzh_data <-
   oison_bzh %>%
@@ -183,9 +185,10 @@ oison_bzh_bocage_nom <-
   as.data.frame() %>%
   group_by(
     nom,
-    groupe2_inpn,
-    type_recherche) %>%
+    groupe2_inpn) %>%
   summarise(nb_tot_obs = n())
+
+### Répartition des observations par département, en fonction du groupe INPN ----
 
 histo_obs_dept_grpe <- 
   ggplot(data = oison_bzh_data, 
@@ -213,6 +216,8 @@ histo_obs_bocage_dept_grpe <-
 
 histo_obs_bocage_dept_grpe
 
+### Répartition des observations par département, en fonction du type de recherche ----
+
 histo_obs_bocage_dept_type_recherche <- 
   ggplot(data = oison_bzh_bocage_data, 
          aes(x = INSEE_DEP, y = nb_tot_obs)) +
@@ -226,6 +231,8 @@ histo_obs_bocage_dept_type_recherche <-
 
 histo_obs_bocage_dept_type_recherche
 
+### Répartition des observations par agent ----
+
 histo_obs_bocage_nom <-
   ggplot(data = oison_bzh_bocage_nom %>%
            filter(nb_tot_obs > 5), 
@@ -236,3 +243,25 @@ histo_obs_bocage_nom <-
        title = str_wrap("Nombre d'observations par agent", width=40))
 
 histo_obs_bocage_nom
+
+### Répartition des observations dans le temps ----
+
+histo_obs_date <-
+  ggplot(data = oison_bzh, 
+       aes(x = lubridate::ymd(date))) +
+  geom_histogram(fill = "blue") +
+  labs(x = "Date de l'observation",
+       y = "Nombre d'observations",
+       title = "Dynamique de renseignement des observations dans OISON")   
+
+histo_obs_date
+
+histo_obs_bocage_date <-
+  ggplot(data = oison_bzh_bocage, 
+         aes(x = lubridate::ymd(date))) +
+  geom_histogram(fill = "blue") +
+  labs(x = "Date de l'observation",
+       y = "Nombre d'observations",
+       title = "Dynamique de renseignement des observations 'Bocage' dans OISON")   
+
+histo_obs_bocage_date
