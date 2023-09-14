@@ -4,6 +4,8 @@ Ce projet vise, à partir d'extractions issues des bases de données OpenObs et 
 
 Ces préidentifications d'espèces pourront servir aux agents chargés de la réalisation des inventaires, à saisir ensuite sous OISON.
 
+Parallèlement, l'outil permet d'analyser rapidement les données OISON produites régionalement, lors de la diffusion des données en interne.
+
 ## Import des données
 
 ### Openobs :
@@ -14,31 +16,54 @@ Les données sont téléchargées librement depuis le site <https://openobs.mnhn
 
 Une couche géopackage est régulièrement mise à disposition par Caroline PENIL et Benoît Richard, à partir d'un dump de la base OISON.
 
-## Ajout du code INSEE commune
+## Visualisation des données OpenObs
 
-Certaines observations ne disposent pas de l'information code INSEE commune. L'outil permet de rattacher le code INSEE de la commune la plus proche.
+### Ajout des codes manquants
 
-## Ajout du code maille 5km (INPN)
+#### Ajout du code INSEE commune
 
-Appariement du code maille 5km de l'INPN par jointure spatiale. L'outil permet de rattacher le code INPN de la maille la plus proche.
+Certaines observations OpenObs ne disposent pas de l'information code INSEE commune. L'outil permet de rattacher le code INSEE de la commune la plus proche.
 
-## Synthèse des listes d'espèce par groupe et par commune
+#### Ajout du code maille 5km (INPN)
 
-Obtention d'une table regroupant par commune (ligne) et par groupe d'espèces (colonne : Amphibiens, Insectes, Chiroptères, Mammifères (hors chiroptères), Oiseaux, Mollusques et Reptiles) les espèces ayant fait l'objet d'une observation dans OpenObs et dans OISON.
+Appariement du code maille 5km de l'INPN par jointure spatiale, aux observations OpenObs. L'outil permet également de rattacher le code INPN de la maille la plus proche.
 
-## Synthèse des listes d'espèce par groupe et par maille
+### Synthèse des listes d'espèce par groupe ...
 
-Obtention, de la même manière, d'une table regroupant par maille (ligne) et par groupe d'espèces (colonne).
+#### ... et par communes
 
-## Export des couches géographiques commune et maille, contenant, par groupe, la liste des epsèces
+Obtention d'une table regroupant par commune (ligne) et par groupe d'espèces (colonne : Amphibiens, Insectes, Chiroptères, Mammifères (hors chiroptères), Oiseaux, Mollusques et Reptiles) les espèces ayant fait l'objet d'une observation dans OpenObs.
+
+![](images/coronelle_lisse_point_commune-01.png){width="400"}
+
+*Exemple de la visualisation des données d'observations ponctuelles de la Coronelle lisse et de la couche de synthèse par commune de la présence de l'espèce.*
+
+#### ... et par mailles 5km
+
+Obtention, de la même manière, d'une table regroupant par maille (ligne) et par groupe (colonne), les espèces observées dans OpenObs.
+
+*INSERT PICTURE*
+*Exemple de la visualisation de la même donnée avec la couche de synthèse par maille.*
+
+### Export des couches géographiques commune et maille, contenant, par groupe, la liste des epsèces observées dans OpenObs
 
 Jointure des précédentes tables respectivement aux couche commune et maille 5 km, puis export au format géopackage.
 
-## Traitement propres aux données OISON :
+## Analyses régionale et départementale des données OISON liées aux "Inventaires Bocage" :
 
-Cette base étant dédiée à nos saisies d'observations en interne, elle permet de suivre la dynamique de saisie, selon les territoire et dans le temps.
+Cette base est dédiée à nos saisies d'observations en interne. Elle permet de suivre la dynamique de saisie, selon les territoires et dans le temps.
 
--   Nombre de saisie par département en fonction des groupes INPN
--   Nombre de saisie par département en fonction du type de recherche effectué (recherché ou fortuit)
+-   \
+    *![](images/graph_dprt_grpe.PNG){width="400"}*
+
+-   Nombre de saisie par département en fonction du type de recherche effectué (cherché ou fortuit)
+
+    ![](observations_recherche_dept.png){width="439"}
+
 -   Nombre de saisie au fil du temps
+
+    ![](observations_date.png){width="400" height="180"}
+
 -   Nombre de saisies par agent
+
+    *CREATE AND INSERT GRAPH*
