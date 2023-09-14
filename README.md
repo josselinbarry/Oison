@@ -1,6 +1,6 @@
-# Oison
+# Inventaire Bocage : OpenObs et OISON
 
-Ce projet vise, à partir d'extractions issues de OpenObs et de OISON, à compiler, par commune et par groupe, les espèces concernées par la liste identifiée comme prioritaire en Bretagne, dans le cadre des "Inventaires bocage".
+Ce projet vise, à partir d'extractions issues des bases de données OpenObs et OISON, à compiler, par commune, par maille et par groupe, les observations d'espèces concernées par la liste identifiée comme prioritaire en Bretagne, dans le cadre des "Inventaires bocage".
 
 Ces préidentifications d'espèces pourront servir aux agents chargés de la réalisation des inventaires, à saisir ensuite sous OISON.
 
@@ -18,13 +18,21 @@ Une couche géopackage est régulièrement mise à disposition par Caroline PENI
 
 Certaines observations ne disposent pas de l'information code INSEE commune. L'outil permet de rattacher le code INSEE de la commune la plus proche.
 
+## Ajout du code maille 5km (INPN)
+
+Appariement du code maille 5km de l'INPN par jointure spatiale. L'outil permet de rattacher le code INPN de la maille la plus proche.
+
 ## Synthèse des listes d'espèce par groupe et par commune
 
 Obtention d'une table regroupant par commune (ligne) et par groupe d'espèces (colonne : Amphibiens, Insectes, Chiroptères, Mammifères (hors chiroptères), Oiseaux, Mollusques et Reptiles) les espèces ayant fait l'objet d'une observation dans OpenObs et dans OISON.
 
-## Export d'une couche géographique commune contenant, par groupe et par type de donnée, la liste des epsèces
+## Synthèse des listes d'espèce par groupe et par maille
 
-Jointure de la précédente table à la couche commune et export au format géopackage.
+Obtention, de la même manière, d'une table regroupant par maille (ligne) et par groupe d'espèces (colonne).
+
+## Export des couches géographiques commune et maille, contenant, par groupe, la liste des epsèces
+
+Jointure des précédentes tables respectivement aux couche commune et maille 5 km, puis export au format géopackage.
 
 ## Traitement propres aux données OISON :
 
