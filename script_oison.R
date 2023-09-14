@@ -15,8 +15,16 @@ library(sf)
 #library(stringi)
 
 source(file = "R/functions.R")
+source(file = "R/lire_renommer_openobs.R")
 
 ## Import données espèces ONPENOBS et communes au 20230622 ----
+
+fichiers_a_importer <- list.files(path = "data", 
+                                  pattern = ".csv$", 
+                                  full.names = T)
+
+liste_especes <- map_df(.x = fichiers_a_importer, 
+                          .f = lire_renommer_openobs)
 
 amphibiens <- data.table::fread(file = "data/liste_bocage_amphibiens.csv",
                                 encoding = "UTF-8",
@@ -83,7 +91,12 @@ especes <- dplyr::bind_rows(amphibiens, insectes, chiropteres, mammiferes, mollu
 especes_geom <- especes %>% 
   filter(!is.na(longitude) & !is.na(latitude)) %>%
   st_as_sf(coords = c("longitude", "latitude"), remove = FALSE, crs = 4326) %>%
-  st_transform(especes_geom, crs = 2154)
+  st_transform(especes_geom, crs = 2154) %>%
+  mutate(nomVernaculaire=str_replace(nomVernaculaire, " \\s*\\([^\\)]+\\)", ""))
+
+names(especes_geom)[87] <-  "typeRegroupement2"
+
+sf::write_sf(obj = especes_geom, dsn = "data/outputs/sp_openobs_20230913.gpkg")
 
 ## Ajout du code INSEE de la commune la plus proche de l'observation (hors pas de XY) pour les codeINSEE non renseignés
 
