@@ -1,4 +1,4 @@
-## VERSION FINALISEE AU 20230627
+# VERSION FINALISEE AU 20230627
 ## En cours de création
 
 # Library ----
@@ -82,7 +82,11 @@ reptiles <- data.table::fread(file = "data/liste_bocage_reptiles.csv",
                                              "codeInseeEPCI" = "character", 
                                              "idCampanuleProtocole" = "character"))    
 
-communes <- sf::read_sf(dsn = "data/COMMUNE.shp")
+communes <- 
+  sf::read_sf(dsn = "data/COMMUNE.shp")
+
+mailles_5km <- 
+  sf::read_sf(dsn = "data/maille_bzh_5km.shp")
 
 ## Création d'une couche géographique especes en L93 ----
 
@@ -121,7 +125,7 @@ cd_insee_especes <- cd_manquant_especes %>%
 
 ## Mise à jour du code INSEE commune de la couche especes_geom
 
-especes_geom_cd2 <- especes_geom  %>%
+especes_geom <- especes_geom  %>%
   left_join(cd_insee_especes, by = c("idSINPOccTax" = "idSINPOccTax")) %>%  
   mutate(codeInseeCommune = ifelse(
     codeInseeCommune == '',
@@ -130,48 +134,94 @@ especes_geom_cd2 <- especes_geom  %>%
   distinct() %>%
   select(-com_la_plus_proche, -distance_km)
 
-nb_esp_geom_sans_INSEE <- especes_geom_cd2 %>%
+nb_esp_geom_sans_INSEE <- especes_geom %>%
   filter(codeInseeCommune == '')
+
+## Jointure du code maille aux observations ----
+
+cd_mailles <-
+  mailles_5km %>%
+  select(CD_SIG)
+
+especes_geom_cd_mailles <- especes_geom %>%
+  st_join(cd_mailles, 
+          largest = T) %>% 
+  distinct()
+
+## Ajout du code de la maille la plus proche de l'observation (hors pas de XY) pour les codes mailles non-renseignés ----
+
+cd_maille_manquant_especes <- especes_geom_cd_mailles %>%
+  select(idSINPOccTax, CODE_SIG, precisionLocalisation) %>%
+  filter((CODE_SIG == '' | is.na(CODE_SIG)) &
+           precisionLocalisation %in% c('XY centroïde commune','XY centroïde ligne/polygone','XY point',  'XY centroïde maille' ))
+
+plus_proche_maille <- sf::st_nearest_feature(x = cd_maille_manquant_especes,
+                                             y = mailles_5km)
+
+dist_maille <- st_distance(cd_maille_manquant_especes, mailles_5km[plus_proche_maille,], by_element = TRUE)
+
+cd_maille_especes <- cd_maille_manquant_especes %>% 
+  cbind(dist_maille) %>% 
+  cbind(mailles_5km[plus_proche_maille,]) %>% 
+  select(idSINPOccTax,
+         maille_la_plus_proche = CD_SIG,
+         distance_maille_km = dist_maille) %>% 
+  sf::st_drop_geometry() %>% 
+  mutate(distance_maille_km = round(distance_maille_km/1000,3))
+
+## Mise à jour du code maille de la couche especes_geom
+
+especes_geom <- especes_geom  %>%
+  left_join(cd_maille_especes, by = c("idSINPOccTax" = "idSINPOccTax")) %>%  
+  mutate(CD_SIG = ifelse(
+    CD_SIG == '',
+    maille_la_plus_proche,
+    CD_SIG)) %>%
+  distinct() %>%
+  select(-maille_la_plus_proche)
+
+nb_esp_geom_sans_code_maille <- especes_geom %>%
+  filter(CD_SIG == '')
 
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
 
-sp_amphibiens_commune <- especes_geom_cd2 %>%
+sp_amphibiens_commune <- especes_geom %>%
   filter(classe == 'Amphibia') %>%
   group_by(codeInseeCommune) %>%
   summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_insectes_commune <- especes_geom_cd2 %>%
+sp_insectes_commune <- especes_geom %>%
   filter(classe == 'Insecta') %>%
   group_by(codeInseeCommune) %>%
   summarise(insectes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_chiropteres_commune <- especes_geom_cd2 %>%
+sp_chiropteres_commune <- especes_geom %>%
   filter(ordre == 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
   summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mammiferes_commune <- especes_geom_cd2 %>%
+sp_mammiferes_commune <- especes_geom %>%
   filter(classe == 'Mammalia' & ordre != 'Chiroptera') %>%
   group_by(codeInseeCommune) %>%
   summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mollusque_commune <- especes_geom_cd2 %>%
+sp_mollusque_commune <- especes_geom %>%
   filter(classe == 'Gastropoda') %>%
   group_by(codeInseeCommune) %>%
   summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_oiseaux_commune <- especes_geom_cd2 %>%
+sp_oiseaux_commune <- especes_geom %>%
   filter(classe == 'Aves') %>%
   group_by(codeInseeCommune) %>%
   summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_reptiles_commune <- especes_geom_cd2 %>%
+sp_reptiles_commune <- especes_geom%>%
   filter(ordre == 'Squamata') %>%
   group_by(codeInseeCommune) %>%
   summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
@@ -202,11 +252,82 @@ sp_communes <- communes %>%
          oiseaux = recoder_manquantes_en_zero(oiseaux),
          reptiles = recoder_manquantes_en_zero(reptiles))
 
-## Export de la couche commune ----
+## Création pour chaque groupe d'une liste d'espèce par code maille ----
+
+
+sp_amphibiens_maille <- especes_geom %>%
+  filter(classe == 'Amphibia') %>%
+  group_by(CD_SIG) %>%
+  summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
+
+sp_insectes_maille <- especes_geom %>%
+  filter(classe == 'Insecta') %>%
+  group_by(CD_SIG) %>%
+  summarise(insectes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
+
+sp_chiropteres_maille <- especes_geom %>%
+  filter(ordre == 'Chiroptera') %>%
+  group_by(CD_SIG) %>%
+  summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
+
+sp_mammiferes_maille <- especes_geom %>%
+  filter(classe == 'Mammalia' & ordre != 'Chiroptera') %>%
+  group_by(CD_SIG) %>%
+  summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
+
+sp_mollusque_maille <- especes_geom %>%
+  filter(classe == 'Gastropoda') %>%
+  group_by(CD_SIG) %>%
+  summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
+
+sp_oiseaux_maille <- especes_geom %>%
+  filter(classe == 'Aves') %>%
+  group_by(CD_SIG) %>%
+  summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
+
+sp_reptiles_maille <- especes_geom%>%
+  filter(ordre == 'Squamata') %>%
+  group_by(CD_SIG) %>%
+  summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  sf::st_drop_geometry()
+
+## Jointure à la couche maille ----
+
+sp_mailles <- mailles_5km %>% 
+  dplyr::left_join(sp_amphibiens_maille, 
+                   by = c("CD_SIG" = "CD_SIG")) %>%
+  dplyr::left_join(sp_insectes_maille, 
+                   by = c("CD_SIG" = "CD_SIG")) %>% 
+  dplyr::left_join(sp_chiropteres_maille, 
+                   by = c("CD_SIG" = "CD_SIG")) %>% 
+  dplyr::left_join(sp_mammiferes_maille, 
+                   by = c("CD_SIG" = "CD_SIG")) %>% 
+  dplyr::left_join(sp_mollusque_maille, 
+                   by = c("CD_SIG" = "CD_SIG")) %>% 
+  dplyr::left_join(sp_oiseaux_maille, 
+                   by = c("CD_SIG" = "CD_SIG")) %>% 
+  dplyr::left_join(sp_reptiles_maille, 
+                   by = c("CD_SIG" = "CD_SIG")) %>% 
+  mutate(amphibiens = recoder_manquantes_en_zero(amphibiens),
+         insectes = recoder_manquantes_en_zero(insectes),
+         chiropteres = recoder_manquantes_en_zero(chiropteres),
+         mammiferes = recoder_manquantes_en_zero(mammiferes),
+         mollusque = recoder_manquantes_en_zero(mollusque),
+         oiseaux = recoder_manquantes_en_zero(oiseaux),
+         reptiles = recoder_manquantes_en_zero(reptiles))
+
+## Export des couches commune et maille ----
 
 sf::write_sf(obj = sp_communes, dsn = "data/outputs/sp_openobs_communes_20230622.gpkg")
 
+sf::write_sf(obj = sp_mailles, dsn = "data/outputs/sp_openobs_mailles_5km_20230622.gpkg")
 
 ## test
-test <- especes_geom_cd2%>%
+test <- especes_geom%>%
 filter(idSINPOccTax == 'b1768dec-fa5e-236d-e053-5014a8c0544d')
