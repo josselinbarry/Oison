@@ -117,6 +117,8 @@ cd_manquant_especes <- especes_geom %>%
 plus_proche_commune <- sf::st_nearest_feature(x = cd_manquant_especes,
                                            y = communes)
 
+view(plus_proche_commune)
+
 dist <- st_distance(cd_manquant_especes, communes[plus_proche_commune,], by_element = TRUE)
 
 cd_insee_especes <- cd_manquant_especes %>% 
@@ -147,7 +149,7 @@ nb_esp_geom_sans_INSEE <- especes_geom %>%
 
 cd_mailles <-
   mailles_5km %>%
-  select(CD_SIG)
+  mutate(CD_join = CD_SIG)
 
 # Très long (env. 2h)
 especes_geom_cd_mailles <- especes_geom %>%
@@ -158,14 +160,16 @@ especes_geom_cd_mailles <- especes_geom %>%
 ## Ajout du code de la maille la plus proche de l'observation (hors pas de XY) pour les codes mailles non-renseignés ----
 
 cd_maille_manquant_especes <- especes_geom_cd_mailles %>%
-  select(idSINPOccTax, CODE_SIG, precisionLocalisation) %>%
-  filter((CODE_SIG == '' | is.na(CODE_SIG)) &
+  select(idSINPOccTax, CD_join, precisionLocalisation) %>%
+  filter((CD_join == '' | is.na(CD_join)) &
            precisionLocalisation %in% c('XY centroïde commune','XY centroïde ligne/polygone','XY point',  'XY centroïde maille' ))
 
 plus_proche_maille <- sf::st_nearest_feature(x = cd_maille_manquant_especes,
                                              y = mailles_5km)
 
 dist_maille <- st_distance(cd_maille_manquant_especes, mailles_5km[plus_proche_maille,], by_element = TRUE)
+
+view(plus_proche_maille)
 
 cd_maille_especes <- cd_maille_manquant_especes %>% 
   cbind(dist_maille) %>% 
@@ -178,7 +182,8 @@ cd_maille_especes <- cd_maille_manquant_especes %>%
 
 ## Mise à jour du code maille de la couche especes_geom
 
-especes_geom <- especes_geom  %>%
+#Très long
+especes_geom_cd <- especes_geom_cd_mailles  %>%
   left_join(cd_maille_especes, by = c("idSINPOccTax" = "idSINPOccTax")) %>%  
   mutate(CD_SIG = ifelse(
     CD_SIG == '',
@@ -187,7 +192,7 @@ especes_geom <- especes_geom  %>%
   distinct() %>%
   select(-maille_la_plus_proche)
 
-nb_esp_geom_sans_code_maille <- especes_geom %>%
+nb_esp_geom_sans_code_maille <- especes_geom_cd %>%
   filter(CD_SIG == '')
 
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
@@ -334,6 +339,7 @@ sf::write_sf(obj = sp_communes, dsn = "data/outputs/sp_openobs_communes_20230622
 
 sf::write_sf(obj = sp_mailles, dsn = "data/outputs/sp_openobs_mailles_5km_20230622.gpkg")
 
-## test
-test <- especes_geom%>%
-filter(idSINPOccTax == 'b1768dec-fa5e-236d-e053-5014a8c0544d')
+# Sauvegarde
+
+save(especes_geom,
+     file = "outputs/oison_openobs.RData")
