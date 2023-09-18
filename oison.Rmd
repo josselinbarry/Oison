@@ -1,0 +1,56 @@
+---
+title: "Analyse régionale des saisies OISON - BRETAGNE"
+author: "jo"
+date: "2023-09-18"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Chargement des packages et des données
+
+```{r}
+library(tidyverse)
+library(sf)
+load(file = "outputs/oison_openobs.RData")
+```
+
+# L'ensemble des données OISON Bretagne produites
+
+## Nombre de données produites par département et par groupe d'espèces
+
+```{r}
+histo_obs_dept_grpe
+```
+
+## Nombre de données produites par département et par type de recherche
+
+```{r}
+histo_obs_bocage_dept_type_recherche
+```
+
+## Dynamique d'enregistrement des observations
+
+```{r}
+histo_obs_date
+```
+# Les données relatives aux "Inventaires Bocage"
+## Nombre de données produites par département et par groupe d'espèces
+
+```{r}
+histo_obs_bocage_dept_grpe
+```
+
+## Nombre de données produites par département et par type de recherche
+
+```{r}
+histo_obs_bocage_dept_type_recherche
+```
+
+## Dynamique d'enregistrement des observations
+
+```{r}
+histo_obs_bocage_date
+```
