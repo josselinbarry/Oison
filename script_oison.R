@@ -1,4 +1,4 @@
-# VERSION FINALISEE AU 20230627
+# VERSION FINALISEE AU 20230914
 ## En cours de création
 
 # Library ----
@@ -25,6 +25,8 @@ fichiers_a_importer <- list.files(path = "data",
 
 liste_especes <- map_df(.x = fichiers_a_importer, 
                           .f = lire_renommer_openobs)
+
+#d'ici ----
 
 amphibiens <- data.table::fread(file = "data/liste_bocage_amphibiens.csv",
                                 encoding = "UTF-8",
@@ -81,6 +83,7 @@ reptiles <- data.table::fread(file = "data/liste_bocage_reptiles.csv",
                                              "codeInseeRegion" = "character",
                                              "codeInseeEPCI" = "character", 
                                              "idCampanuleProtocole" = "character"))    
+#A là ----
 
 communes <- 
   sf::read_sf(dsn = "data/COMMUNE.shp")
@@ -91,6 +94,8 @@ mailles_5km <-
 ## Création d'une couche géographique especes en L93 ----
 
 especes <- dplyr::bind_rows(amphibiens, insectes, chiropteres, mammiferes, mollusque, oiseaux, reptiles) 
+
+#A là bis ----
 
 especes_geom <- especes %>% 
   filter(!is.na(longitude) & !is.na(latitude)) %>%
@@ -125,6 +130,7 @@ cd_insee_especes <- cd_manquant_especes %>%
 
 ## Mise à jour du code INSEE commune de la couche especes_geom
 
+# Très long (env. 2h)
 especes_geom <- especes_geom  %>%
   left_join(cd_insee_especes, by = c("idSINPOccTax" = "idSINPOccTax")) %>%  
   mutate(codeInseeCommune = ifelse(
@@ -143,6 +149,7 @@ cd_mailles <-
   mailles_5km %>%
   select(CD_SIG)
 
+# Très long (env. 2h)
 especes_geom_cd_mailles <- especes_geom %>%
   st_join(cd_mailles, 
           largest = T) %>% 
@@ -253,7 +260,6 @@ sp_communes <- communes %>%
          reptiles = recoder_manquantes_en_zero(reptiles))
 
 ## Création pour chaque groupe d'une liste d'espèce par code maille ----
-
 
 sp_amphibiens_maille <- especes_geom %>%
   filter(classe == 'Amphibia') %>%
