@@ -339,7 +339,12 @@ sf::write_sf(obj = sp_communes, dsn = "data/outputs/sp_openobs_communes_20230622
 
 sf::write_sf(obj = sp_mailles, dsn = "data/outputs/sp_openobs_mailles_5km_20230622.gpkg")
 
-# Sauvegarde
+# Sauvegarde des résultats
 
 save(especes_geom,
+     especes_geom_cd,
      file = "outputs/oison_openobs.RData")
+
+# chargement des résultats
+
+load(file = "outputs/oison_openobs.RData")
