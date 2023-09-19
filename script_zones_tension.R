@@ -36,7 +36,7 @@ zones_tension_urba <- zones_tension_urba %>%
 
 zt_agri_urba <- 
   dplyr::bind_rows(zones_tension_agri, zones_tension_urba) %>%
-  mutate(cd_zone = unite(type_pression, id))
+  mutate(cd_zone = paste(type_pression, id))
 
 ## Jointure du code ZT aux observations et filtre des celles en ZT ----
 
@@ -47,7 +47,7 @@ especes_geom_cd_zt <- especes_geom %>%
 
 especes_geom_cd_zt <- especes_geom_cd_zt %>%
   filter(!is.na(id)) %>%
-  mutate(cd_zone = unite(type_pression, id))
+  mutate(cd_zone = paste(type_pression, id))
 
 save(especes_geom_cd_zt,
      file = "outputs/especes_geom_cd_zt.RData")

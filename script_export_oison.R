@@ -1,9 +1,15 @@
 ## VERSION FINALISEE AU 20230919
 ## En cours de création
 
+#packages
+install.packages("kableExtra")
+install.packages("formattable") 
+
 # Library ----
 #library(plyr)
 library(tidyverse)
+library(knitr)
+library(kableExtra)
 # library(lubridate)
 # library(RcppRoll)
 # library(DT)
@@ -195,10 +201,46 @@ stat_oison <-
   sf::st_drop_geometry() %>% 
   group_by(INSEE_DEP)%>%
   summarise(nb_tot_obs = n()) %>%
-  mutate(prct_obs = round(nb_tot_obs*100/sum(nb_tot_obs), 2),
-         obs_tot_reg = sum(oison_bzh_data$nb_tot_obs)) 
+  mutate(prct_obs = round(nb_tot_obs*100/sum(nb_tot_obs), 2)) 
 
+somme_stat_oison <- stat_oison %>%
+  summarise_at(c("nb_tot_obs", "prct_obs"), sum, na.rm = TRUE) %>%
+  mutate(INSEE_DEP = 'Total DR')
+           
+stat_oison_bzh <-
+  dplyr::bind_rows(stat_oison, somme_stat_oison) %>%
+  mutate("SD" = INSEE_DEP,
+         "Nombre d'observations" = nb_tot_obs,
+         "Pourcentage d'observations" = prct_obs) %>%
+  select(- INSEE_DEP, -nb_tot_obs, -prct_obs) %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(5, background = "#66CCEE")
 
+stat_oison_bzh
+
+stat_oison_bocage <- 
+  oison_bzh_bocage %>%
+  sf::st_drop_geometry() %>% 
+  group_by(INSEE_DEP)%>%
+  summarise(nb_tot_obs = n()) %>%
+  mutate(prct_obs = round(nb_tot_obs*100/sum(nb_tot_obs), 2)) 
+
+somme_stat_oison_bocage <- stat_oison_bocage %>%
+  summarise_at(c("nb_tot_obs", "prct_obs"), sum, na.rm = TRUE) %>%
+  mutate(INSEE_DEP = 'Total DR')
+
+stat_oison_bzh_bocage <-
+  dplyr::bind_rows(stat_oison_bocage, somme_stat_oison_bocage) %>%
+  mutate("SD" = INSEE_DEP,
+         "Nombre d'observations" = nb_tot_obs,
+         "Pourcentage d'observations" = prct_obs) %>%
+  select(- INSEE_DEP, -nb_tot_obs, -prct_obs) %>%
+  kbl() %>%
+  kable_styling(bootstrap_options = c("striped", "hover")) %>%
+  row_spec(5, background = "#66CCEE")
+
+stat_oison_bzh_bocage
 
 
 ### Répartition des observations par département, en fonction du groupe INPN ----
@@ -283,7 +325,8 @@ histo_obs_bocage_date
 
 save(oison_bzh_data,
      oison_bzh_bocage_data,
-     stat_oison,
+     stat_oison_bzh,
+     stat_oison_bzh_bocage,
      histo_obs_dept_grpe,
      histo_obs_bocage_dept_grpe,
      histo_obs_bocage_dept_type_recherche,
