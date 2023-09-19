@@ -266,43 +266,43 @@ sp_communes <- communes %>%
 
 ## Création pour chaque groupe d'une liste d'espèce par code maille ----
 
-sp_amphibiens_maille <- especes_geom %>%
+sp_amphibiens_maille <- especes_geom_cd %>%
   filter(classe == 'Amphibia') %>%
   group_by(CD_SIG) %>%
   summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_insectes_maille <- especes_geom %>%
+sp_insectes_maille <- especes_geom_cd %>%
   filter(classe == 'Insecta') %>%
   group_by(CD_SIG) %>%
   summarise(insectes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_chiropteres_maille <- especes_geom %>%
+sp_chiropteres_maille <- especes_geom_cd %>%
   filter(ordre == 'Chiroptera') %>%
   group_by(CD_SIG) %>%
   summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mammiferes_maille <- especes_geom %>%
+sp_mammiferes_maille <- especes_geom_cd %>%
   filter(classe == 'Mammalia' & ordre != 'Chiroptera') %>%
   group_by(CD_SIG) %>%
   summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mollusque_maille <- especes_geom %>%
+sp_mollusque_maille <- especes_geom_cd %>%
   filter(classe == 'Gastropoda') %>%
   group_by(CD_SIG) %>%
   summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_oiseaux_maille <- especes_geom %>%
+sp_oiseaux_maille <- especes_geom_cd %>%
   filter(classe == 'Aves') %>%
   group_by(CD_SIG) %>%
   summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_reptiles_maille <- especes_geom%>%
+sp_reptiles_maille <- especes_geom_cd %>%
   filter(ordre == 'Squamata') %>%
   group_by(CD_SIG) %>%
   summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
@@ -343,6 +343,8 @@ sf::write_sf(obj = sp_mailles, dsn = "data/outputs/sp_openobs_mailles_5km_202306
 
 save(especes_geom,
      especes_geom_cd,
+     sp_mailles,
+     sp_communes,
      file = "outputs/oison_openobs.RData")
 
 # chargement des résultats
