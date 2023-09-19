@@ -15,9 +15,21 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(sf)
 load(file = "outputs/oison_openobs.RData")
+load(file = "outputs/histo_oison_openobs.RData")
 ```
 
 # L'ensemble des données OISON Bretagne produites
+
+Il y a actuellement 
+```
+{r}sum(oison_bzh_data$nb_tot_obs)
+``` 
+données produites dans la région, réparties de la manière suivante entre les départements :
+
+```{r}
+stat_oison
+```
+
 
 ## Nombre de données produites par département et par groupe d'espèces
 
@@ -36,7 +48,9 @@ histo_obs_bocage_dept_type_recherche
 ```{r}
 histo_obs_date
 ```
+
 # Les données relatives aux "Inventaires Bocage"
+
 ## Nombre de données produites par département et par groupe d'espèces
 
 ```{r}

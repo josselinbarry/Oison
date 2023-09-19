@@ -1,4 +1,4 @@
-## VERSION FINALISEE AU 20230913
+## VERSION FINALISEE AU 20230919
 ## En cours de création
 
 # Library ----
@@ -188,6 +188,19 @@ oison_bzh_bocage_nom <-
     groupe2_inpn) %>%
   summarise(nb_tot_obs = n())
 
+### Informations de base
+
+stat_oison <- 
+  oison_bzh %>%
+  sf::st_drop_geometry() %>% 
+  group_by(INSEE_DEP)%>%
+  summarise(nb_tot_obs = n()) %>%
+  mutate(prct_obs = round(nb_tot_obs*100/sum(nb_tot_obs), 2),
+         obs_tot_reg = sum(oison_bzh_data$nb_tot_obs)) 
+
+
+
+
 ### Répartition des observations par département, en fonction du groupe INPN ----
 
 histo_obs_dept_grpe <- 
@@ -252,7 +265,7 @@ histo_obs_date <-
   geom_histogram(fill = "blue") +
   labs(x = "Date de l'observation",
        y = "Nombre d'observations",
-       title = "Dynamique de renseignement des observations dans OISON")   
+       title = str_wrap("Dynamique de renseignement des observations dans OISON", width=50))   
 
 histo_obs_date
 
@@ -262,6 +275,20 @@ histo_obs_bocage_date <-
   geom_histogram(fill = "blue") +
   labs(x = "Date de l'observation",
        y = "Nombre d'observations",
-       title = "Dynamique de renseignement des observations 'Bocage' dans OISON")   
+       title = str_wrap("Dynamique de renseignement des observations 'Bocage' dans OISON", width=50))   
 
 histo_obs_bocage_date
+
+# Sauvegarde
+
+save(oison_bzh_data,
+     oison_bzh_bocage_data,
+     stat_oison,
+     histo_obs_dept_grpe,
+     histo_obs_bocage_dept_grpe,
+     histo_obs_bocage_dept_type_recherche,
+     histo_obs_bocage_nom,
+     histo_obs_date,
+     histo_obs_bocage_date,
+     file = "outputs/histo_oison_openobs.RData")
+
