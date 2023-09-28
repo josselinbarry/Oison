@@ -4,6 +4,9 @@
 #packages
 install.packages("kableExtra")
 install.packages("formattable") 
+install.packages("magick")
+install.packages("webshot")
+webshot::install_phantomjs()
 
 # Library ----
 #library(plyr)
@@ -158,6 +161,15 @@ oison_bzh_bocage <-
     'Zootoca vivipara vivipara'
     )) 
 
+sf::write_sf(obj = oison_bzh_bocage, dsn = "data/outputs/oison_bretagne_bocage_20230606.gpkg")
+     
+## Preparation de la couche de jointure avec INPN ----
+
+obs_oison_cd_insee <- oison_bzh_bocage %>%
+  select(nom_vernaculaire, INSEE_COM, classe, ordre) %>%
+  sf::st_drop_geometry()
+
+
 ## Analyse des données OISON-BOCAGE ----
 
 ### Préparation des données par groupby ----
@@ -215,9 +227,9 @@ stat_oison_bzh <-
   select(- INSEE_DEP, -nb_tot_obs, -prct_obs) %>%
   kbl() %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  row_spec(5, background = "#66CCEE")
+  row_spec(5, background = "#66CCEE") 
 
-stat_oison_bzh
+save_kable(stat_oison_bzh, file = "outputs/observations_dprt_dr.png", self_contained = T)
 
 stat_oison_bocage <- 
   oison_bzh_bocage %>%
@@ -238,7 +250,7 @@ stat_oison_bzh_bocage <-
   select(- INSEE_DEP, -nb_tot_obs, -prct_obs) %>%
   kbl() %>%
   kable_styling(bootstrap_options = c("striped", "hover")) %>%
-  row_spec(5, background = "#66CCEE")
+  row_spec(5, background = "#66CCEE") 
 
 stat_oison_bzh_bocage
 
@@ -323,7 +335,8 @@ histo_obs_bocage_date
 
 # Sauvegarde
 
-save(oison_bzh_data,
+save(oison_bzh_bocage,
+     oison_bzh_data,
      oison_bzh_bocage_data,
      stat_oison_bzh,
      stat_oison_bzh_bocage,
@@ -335,3 +348,4 @@ save(oison_bzh_data,
      histo_obs_bocage_date,
      file = "outputs/histo_oison_openobs.RData")
 
+load(file = "outputs/histo_oison_openobs.RData")

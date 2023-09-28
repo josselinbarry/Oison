@@ -12,8 +12,6 @@ knitr::opts_chunk$set(echo = FALSE)
 ## Chargement des packages et des données
 
 ```{r}
-library(knitr)
-library(kableExtra)
 library(tidyverse)
 library(sf)
 load(file = "outputs/oison_openobs.RData")
@@ -24,9 +22,7 @@ load(file = "outputs/histo_oison_openobs.RData")
 
 Il y a actuellement 2630 observations enregistrées pour la région, réparties de la manière suivante entre les départements :
 
-```{r}
-stat_oison_bzh
-```
+![](outputs/stat_oison_bzh.png)
 
 ## Nombre de données produites par département et par groupe d'espèces
 
@@ -50,9 +46,7 @@ histo_obs_date
 
 Il y a actuellement 989 observations enregistrées pour la région,sur les espèces ciblées comme prioritaires pour l'inventaire Bocage. Elles sont réparties de la manière suivante entre les départements :
 
-```{r}
-stat_oison_bzh
-```
+![](outputs/stat_oison_bzh_bocage.png)
 
 ## Nombre de données produites par département et par groupe d'espèces
 

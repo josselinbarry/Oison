@@ -157,6 +157,9 @@ especes_geom_cd_mailles <- especes_geom %>%
           largest = T) %>% 
   distinct()
 
+especes_geom_cd_mailles <- especes_geom_cd %>%
+  select(- distance_maille_km)
+
 ## Ajout du code de la maille la plus proche de l'observation (hors pas de XY) pour les codes mailles non-renseignés ----
 
 cd_maille_manquant_especes <- especes_geom_cd_mailles %>%
@@ -186,76 +189,96 @@ cd_maille_especes <- cd_maille_manquant_especes %>%
 especes_geom_cd <- especes_geom_cd_mailles  %>%
   left_join(cd_maille_especes, by = c("idSINPOccTax" = "idSINPOccTax")) %>%  
   mutate(CD_SIG = ifelse(
-    CD_SIG == '',
+    (CD_SIG == '' | is.na(CD_SIG)),
     maille_la_plus_proche,
     CD_SIG)) %>%
   distinct() %>%
-  select(-maille_la_plus_proche)
+  select(-maille_la_plus_proche, -CD_join)
 
 nb_esp_geom_sans_code_maille <- especes_geom_cd %>%
   filter(CD_SIG == '')
 
+# Fusion des observations INPN et OISON ----
+
+## Preparation couche INPN ----
+
+obs_inpn_cd_insee <- especes_geom_cd %>%
+  filter(libelleCadreAcquisition != c( 'Rapportage 2001-2006 au titre de la directive Habitats-Faune-Flore' ,  
+                                       'Rapportage 2007-2012 au titre de la directive Habitats-Faune-Flore' ,  
+                                       'Rapportage 2013-2018 au titre de la directive Habitats-Faune-Flore' )) %>%
+  mutate(nom_vernaculaire = nomVernaculaire,
+         INSEE_COM = codeInseeCommune) %>%
+  select(nom_vernaculaire, INSEE_COM, classe, ordre) %>%
+  sf::st_drop_geometry()
+
+## Fusion des couches ----
+
+obs_totales_cd_insee <- 
+  dplyr::bind_rows(obs_oison_cd_insee, obs_inpn_cd_insee)
+
+## Creation de la table de synthèse ----
+
 ## Création pour chaque groupe d'une liste d'espèce par code INSEE_commune ----
 
-sp_amphibiens_commune <- especes_geom %>%
+sp_amphibiens_commune <- obs_totales_cd_insee %>%
   filter(classe == 'Amphibia') %>%
-  group_by(codeInseeCommune) %>%
-  summarise(amphibiens = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  group_by(INSEE_COM) %>%
+  summarise(amphibiens = paste(unique(nom_vernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_insectes_commune <- especes_geom %>%
+sp_insectes_commune <- obs_totales_cd_insee %>%
   filter(classe == 'Insecta') %>%
-  group_by(codeInseeCommune) %>%
-  summarise(insectes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  group_by(INSEE_COM) %>%
+  summarise(insectes = paste(unique(nom_vernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_chiropteres_commune <- especes_geom %>%
+sp_chiropteres_commune <- obs_totales_cd_insee %>%
   filter(ordre == 'Chiroptera') %>%
-  group_by(codeInseeCommune) %>%
-  summarise(chiropteres = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  group_by(INSEE_COM) %>%
+  summarise(chiropteres = paste(unique(nom_vernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mammiferes_commune <- especes_geom %>%
+sp_mammiferes_commune <- obs_totales_cd_insee %>%
   filter(classe == 'Mammalia' & ordre != 'Chiroptera') %>%
-  group_by(codeInseeCommune) %>%
-  summarise(mammiferes = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  group_by(INSEE_COM) %>%
+  summarise(mammiferes = paste(unique(nom_vernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_mollusque_commune <- especes_geom %>%
+sp_mollusque_commune <- obs_totales_cd_insee %>%
   filter(classe == 'Gastropoda') %>%
-  group_by(codeInseeCommune) %>%
-  summarise(mollusque = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  group_by(INSEE_COM) %>%
+  summarise(mollusque = paste(unique(nom_vernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_oiseaux_commune <- especes_geom %>%
+sp_oiseaux_commune <- obs_totales_cd_insee %>%
   filter(classe == 'Aves') %>%
-  group_by(codeInseeCommune) %>%
-  summarise(oiseaux = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  group_by(INSEE_COM) %>%
+  summarise(oiseaux = paste(unique(nom_vernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
-sp_reptiles_commune <- especes_geom%>%
+sp_reptiles_commune <- obs_totales_cd_insee%>%
   filter(ordre == 'Squamata') %>%
-  group_by(codeInseeCommune) %>%
-  summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
+  group_by(INSEE_COM) %>%
+  summarise(reptiles = paste(unique(nom_vernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
 ## Jointure à la couche commune ----
 
 sp_communes <- communes %>% 
   dplyr::left_join(sp_amphibiens_commune, 
-                   by = c("INSEE_COM" = "codeInseeCommune")) %>%
+                   by = c("INSEE_COM" = "INSEE_COM")) %>%
   dplyr::left_join(sp_insectes_commune, 
-                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+                   by = c("INSEE_COM" = "INSEE_COM")) %>% 
   dplyr::left_join(sp_chiropteres_commune, 
-                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+                   by = c("INSEE_COM" = "INSEE_COM")) %>% 
   dplyr::left_join(sp_mammiferes_commune, 
-                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+                   by = c("INSEE_COM" = "INSEE_COM")) %>% 
   dplyr::left_join(sp_mollusque_commune, 
-                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+                   by = c("INSEE_COM" = "INSEE_COM")) %>% 
   dplyr::left_join(sp_oiseaux_commune, 
-                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+                   by = c("INSEE_COM" = "INSEE_COM")) %>% 
   dplyr::left_join(sp_reptiles_commune, 
-                   by = c("INSEE_COM" = "codeInseeCommune")) %>% 
+                   by = c("INSEE_COM" = "INSEE_COM")) %>% 
   mutate(amphibiens = recoder_manquantes_en_zero(amphibiens),
          insectes = recoder_manquantes_en_zero(insectes),
          chiropteres = recoder_manquantes_en_zero(chiropteres),
@@ -308,6 +331,13 @@ sp_reptiles_maille <- especes_geom_cd %>%
   summarise(reptiles = paste(unique(nomVernaculaire), collapse = ', ')) %>% 
   sf::st_drop_geometry()
 
+## Ajout du nombre d'observations par maille ----
+
+intersections <- 
+  st_intersects(mailles_5km, especes_geom_cd, sparse = TRUE)
+
+mailles_5km$nb_observations <- sapply(X = intersections, FUN = length)
+
 ## Jointure à la couche maille ----
 
 sp_mailles <- mailles_5km %>% 
@@ -335,7 +365,9 @@ sp_mailles <- mailles_5km %>%
 
 ## Export des couches commune et maille ----
 
-sf::write_sf(obj = sp_communes, dsn = "data/outputs/sp_openobs_communes_20230622.gpkg")
+sf::write_sf(obj = mailles_5km, dsn = "data/outputs/test__occurences_maille_20230622.gpkg")
+
+sf::write_sf(obj = sp_communes, dsn = "data/outputs/sp_openobs_communes_20230928.gpkg")
 
 sf::write_sf(obj = sp_mailles, dsn = "data/outputs/sp_openobs_mailles_5km_20230622.gpkg")
 
